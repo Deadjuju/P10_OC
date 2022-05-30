@@ -1,0 +1,26 @@
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__
+
+# Environments
+.env
+.venv
+env
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea
+.idea/
+
+# Git
+.git
+.git/
+
+# Db
+db.sqlite3
