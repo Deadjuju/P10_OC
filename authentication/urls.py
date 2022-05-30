@@ -1,9 +1,14 @@
-from django.urls import path
-from authentication.views import UserAPIView
+from django.urls import path, include
+from rest_framework import routers
+
+from authentication.views import UserViewset
 
 
 app_name = 'authentication'
 
+router = routers.SimpleRouter()
+router.register('user', UserViewset, basename='user')
+
 urlpatterns = [
-    path('user/', UserAPIView.as_view())
+    path('', include(router.urls))
 ]
