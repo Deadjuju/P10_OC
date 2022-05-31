@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
-from api.models import Project
-from api.serializers import ProjectDetailSerializer, ProjectListSerializer
+from api.models import Project, Contributor
+from api.serializers import ProjectDetailSerializer, ProjectListSerializer, ContributorSerializer
 
 
 class ProjectViewset(ModelViewSet):
@@ -15,3 +15,14 @@ class ProjectViewset(ModelViewSet):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(ProjectViewset, self).get_serializer_class()
+
+
+class ContributorViewset(ModelViewSet):
+    serializer_class = ContributorSerializer
+
+    def get_queryset(self):
+        queryset = Contributor.objects.all()
+        project_id = self.request.GET.get('project_id')
+        if project_id is not None:
+            queryset = Contributor.objects.filter(project_id=project_id)
+        return queryset

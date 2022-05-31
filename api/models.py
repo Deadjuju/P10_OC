@@ -23,3 +23,26 @@ class Project(models.Model):
                                        related_name='projects',
                                        verbose_name="Project author",
                                        null=True)
+
+    def __str__(self):
+        return f"{self.title}"
+
+
+class Contributor(models.Model):
+    """ Relations between users and projects """
+
+    ROLE_CHOICES = [
+        ("author", "Author"),
+        ("contributor", "Contributor")
+    ]
+
+    user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                on_delete=models.CASCADE,
+                                related_name="contributors"
+                                )
+    project_id = models.ForeignKey(to=Project,
+                                   on_delete=models.CASCADE,
+                                   related_name="project_contributor"
+                                   )
+    role = models.CharField(max_length=128, choices=ROLE_CHOICES, verbose_name="Roles")
+
