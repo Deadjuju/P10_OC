@@ -7,7 +7,7 @@ from api.views import ProjectViewset
 app_name = 'api'
 
 router = routers.SimpleRouter()
-router.register('project', ProjectViewset, basename='user')
+router.register('projects', ProjectViewset, basename='user')
 
 urlpatterns = [
     path('', include(router.urls))
