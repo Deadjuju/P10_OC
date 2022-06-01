@@ -1,7 +1,8 @@
 from rest_framework.viewsets import ModelViewSet
 
-from api.models import Project, Contributor
-from api.serializers import ProjectDetailSerializer, ProjectListSerializer, ContributorSerializer
+from api.models import Project, Contributor, Issue
+from api.serializers import ProjectDetailSerializer, ProjectListSerializer, ContributorSerializer, IssueListSerializer, \
+    IssueDetailSerializer
 
 
 class ProjectViewset(ModelViewSet):
@@ -26,3 +27,20 @@ class ContributorViewset(ModelViewSet):
         if project_id is not None:
             queryset = Contributor.objects.filter(project_id=project_id)
         return queryset
+
+
+class IssueViewset(ModelViewSet):
+    serializer_class = IssueListSerializer
+    detail_serializer_class = IssueDetailSerializer
+
+    def get_queryset(self):
+        queryset = Issue.objects.all()
+        project_id = self.request.GET.get('project_id')
+        if project_id is not None:
+            queryset = Issue.objects.filter(project_id=project_id)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return self.detail_serializer_class
+        return super(IssueViewset, self).get_serializer_class()

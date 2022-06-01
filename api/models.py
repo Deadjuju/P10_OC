@@ -46,3 +46,42 @@ class Contributor(models.Model):
                                    )
     role = models.CharField(max_length=128, choices=ROLE_CHOICES, verbose_name="Roles")
 
+
+class Issue(models.Model):
+    """ all information relating to an issue """
+
+    TAG_CHOICES = [
+        ("bug", "Bug"),
+        ("improvement", "Improvement"),
+        ("task", 'Task')
+    ]
+    PRIORITY_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High")
+    ]
+    STATUS_CHOICES = [
+        ("todo", "To do"),
+        ("in progress", "In progress"),
+        ("completed", "Completed")
+    ]
+
+    title = models.CharField(max_length=128, verbose_name="Title")
+    description = models.CharField(max_length=2048, verbose_name="Description")
+    tag = models.CharField(max_length=128, choices=TAG_CHOICES)
+    priority = models.CharField(max_length=128, choices=PRIORITY_CHOICES)
+    project_id = models.ForeignKey(to=Project,
+                                   on_delete=models.CASCADE)
+    status = models.CharField(max_length=128, choices=STATUS_CHOICES)
+    author_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                       on_delete=models.CASCADE,
+                                       related_name='issues_author')
+    assignee_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                         on_delete=models.CASCADE,
+                                         default=author_user_id,
+                                         related_name='issues_assigned')
+    date_created = models.DateTimeField(auto_now_add=True, verbose_name="Creation date")
+    date_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title}"

@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from api.models import Project, Contributor
+from api.models import Project, Contributor, Issue
 from authentication.serializers import UserSerializer
 
 
@@ -28,3 +28,25 @@ class ContributorSerializer(ModelSerializer):
     class Meta:
         model = Contributor
         fields = ['id', 'user_id', 'project_id', 'role']
+
+
+# -------------------------------- Issue --------------------------------
+
+class IssueListSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issue
+        fields = [
+            'id', 'title', 'description', 'tag', 'priority',
+            'project_id', 'status', 'author_user_id', 'assignee_user_id', 'date_created'
+        ]
+
+
+class IssueDetailSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issue
+        fields = [
+            'id', 'title', 'description', 'tag', 'priority',
+            'project_id', 'status', 'author_user_id', 'assignee_user_id', 'date_created'
+        ]
