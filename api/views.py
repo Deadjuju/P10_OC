@@ -1,8 +1,8 @@
 from rest_framework.viewsets import ModelViewSet
 
-from api.models import Project, Contributor, Issue
+from api.models import Project, Contributor, Issue, Comment
 from api.serializers import ProjectDetailSerializer, ProjectListSerializer, ContributorSerializer, IssueListSerializer, \
-    IssueDetailSerializer
+    IssueDetailSerializer, CommentListSerializer, CommentDetailSerializer
 
 
 class ProjectViewset(ModelViewSet):
@@ -44,3 +44,21 @@ class IssueViewset(ModelViewSet):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(IssueViewset, self).get_serializer_class()
+
+
+class CommentViewset(ModelViewSet):
+    serializer_class = CommentListSerializer
+    detail_serializer_class = CommentDetailSerializer
+
+    def get_queryset(self):
+        queryset = Comment.objects.all()
+        issue_id = self.request.GET.get('issue_id')
+        if issue_id is not None:
+            queryset = Comment.objects.filter(issue_id=issue_id)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return self.detail_serializer_class
+        return super(CommentViewset, self).get_serializer_class()
+
