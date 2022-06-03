@@ -18,7 +18,6 @@ class UserViewset(ModelViewSet):
         return User.objects.all()
 
     def create(self, request, *args, **kwargs):
-        print("COUCOU")
         data = {
             "email": request.POST.get('email'),
             "first_name": request.POST.get('first_name'),

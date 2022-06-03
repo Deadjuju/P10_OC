@@ -19,26 +19,11 @@ class UserSerializer(ModelSerializer):
         }
 
     def create(self, validated_data):
-        print("SERIALIZOR!!!")
         email = validated_data['email']
         first_name = validated_data['first_name']
         last_name = validated_data['last_name']
         password = validated_data["password"]
-        user = User.objects.create(**validated_data)  # saving user object
-        # user = User.objects.create_user(**validated_data)  # saving user object
-        user.set_password(validated_data["password"])
+        user = User.objects.create_user(**validated_data)
         user.save()
-        print("SAVE!!!")
+        print("User created correctly")
         return user
-
-        # def create(self, validated_data):
-        #     print("COUCOU")
-        #     user = User(
-        #         email=validated_data['email'],
-        #         first_name=validated_data['first_name'],
-        #         last_name=validated_data['last_name'],
-        #     )
-        #     user.set_password(validated_data["password"])
-        #     user.save()
-        #     print("bye!")
-        #     return user
