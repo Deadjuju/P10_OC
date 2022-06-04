@@ -19,11 +19,13 @@ class UserSerializer(ModelSerializer):
         }
 
     def create(self, validated_data):
+        print("*" * 90)
+        print(validated_data)
         email = validated_data['email']
         first_name = validated_data['first_name']
         last_name = validated_data['last_name']
         password = validated_data["password"]
         user = User.objects.create_user(**validated_data)
         user.save()
-        print("User created correctly")
+        print("User created correctly | From serializer")
         return user
