@@ -1,21 +1,43 @@
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.models import Project, Contributor, Issue, Comment
-from api.serializers import ProjectDetailSerializer, ProjectListSerializer, ContributorSerializer, IssueListSerializer, \
-    IssueDetailSerializer, CommentListSerializer, CommentDetailSerializer
+from api.serializers import (ProjectDetailSerializer,
+                             ProjectListSerializer,
+                             ContributorSerializer,
+                             IssueListSerializer,
+                             IssueDetailSerializer,
+                             CommentListSerializer,
+                             CommentDetailSerializer)
+
+
+User = get_user_model()
 
 
 class ProjectViewset(ModelViewSet):
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if self.action == 'list':
+            query = self.request.user
+            return Project.objects.filter(author_user_id=query.id)
         return Project.objects.all()
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(ProjectViewset, self).get_serializer_class()
+
+    # def list(self, request, *args, **kwargs):
+    #     query = request.user
+    #     query_set = Project.objects.filter(author_user_id=query.id)
+    #     return Response(self.serializer_class(query_set, many=True).data,
+    #                     status=status.HTTP_200_OK)
 
 
 class ContributorViewset(ModelViewSet):
