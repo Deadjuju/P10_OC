@@ -55,8 +55,8 @@ class ProjectViewset(ModelViewSet):
                                            context={'author_user_id': id_author})
         if serializer.is_valid():
             project = serializer.save()
-            contributor = Contributor.objects.create(project_id=project,
-                                                     user_id=request.user,
+            contributor = Contributor.objects.create(project=project,
+                                                     user=request.user,
                                                      role='author')
             contributor.save()
             print("The project has been saved.")

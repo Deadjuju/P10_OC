@@ -36,11 +36,11 @@ class Contributor(models.Model):
         ("contributor", "Contributor")
     ]
 
-    user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 related_name="contributors"
                                 )
-    project_id = models.ForeignKey(to=Project,
+    project = models.ForeignKey(to=Project,
                                    on_delete=models.CASCADE,
                                    related_name="project_contributor"
                                    )
