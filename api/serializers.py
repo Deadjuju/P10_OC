@@ -10,6 +10,10 @@ class ProjectListSerializer(ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'title', 'description', 'type', 'author_user_id']
+        extra_kwargs = {
+            'author_user_id': {'write_only': True},
+            'description': {'write_only': True},
+        }
 
     def create(self, validated_data):
         title = validated_data['title']
