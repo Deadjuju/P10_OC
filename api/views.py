@@ -12,7 +12,7 @@ from api.serializers import (ProjectDetailSerializer,
                              IssueDetailSerializer,
                              CommentListSerializer,
                              CommentDetailSerializer)
-
+from api.utils import validate_multiple_choice
 
 User = get_user_model()
 
@@ -43,10 +43,12 @@ class ProjectViewset(ModelViewSet):
         print("*" * 85)
         # data = request.data
         id_author = request.user.id
+        type = validate_multiple_choice(choices_list=Project.PROJECT_TYPE,
+                                        user_choice=request.POST.get('type'))
         data = {
             "title": request.POST.get('title', ''),
             "description": request.POST.get('description', ''),
-            "type": request.POST.get('type', ''),
+            "type": type,
             "author_user_id": id_author,
         }
         serializer = self.serializer_class(data=data,
@@ -103,4 +105,3 @@ class CommentViewset(ModelViewSet):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(CommentViewset, self).get_serializer_class()
-
