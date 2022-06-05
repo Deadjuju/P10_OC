@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import status, exceptions
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -54,7 +54,11 @@ class ProjectViewset(ModelViewSet):
         serializer = self.serializer_class(data=data,
                                            context={'author_user_id': id_author})
         if serializer.is_valid():
-            serializer.save()
+            project = serializer.save()
+            contributor = Contributor.objects.create(project_id=project,
+                                                     user_id=request.user,
+                                                     role='author')
+            contributor.save()
             print("The project has been saved.")
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
