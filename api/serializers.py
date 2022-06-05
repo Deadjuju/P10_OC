@@ -11,6 +11,15 @@ class ProjectListSerializer(ModelSerializer):
         model = Project
         fields = ['id', 'title', 'description', 'type', 'author_user_id']
 
+    def create(self, validated_data):
+        title = validated_data['title']
+        description = validated_data['description']
+        type = validated_data['type']
+        author_user_id = validated_data["author_user_id"]
+        project = Project.objects.create(**validated_data)
+        project.save()
+        return project
+
 
 class ProjectDetailSerializer(ModelSerializer):
     author_user_id = UserSerializer()

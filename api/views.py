@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import status, exceptions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -38,6 +38,26 @@ class ProjectViewset(ModelViewSet):
     #     query_set = Project.objects.filter(author_user_id=query.id)
     #     return Response(self.serializer_class(query_set, many=True).data,
     #                     status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        print("*" * 85)
+        # data = request.data
+        id_author = request.user.id
+        data = {
+            "title": request.POST.get('title', ''),
+            "description": request.POST.get('description', ''),
+            "type": request.POST.get('type', ''),
+            "author_user_id": id_author,
+        }
+        serializer = self.serializer_class(data=data,
+                                           context={'author_user_id': id_author})
+        if serializer.is_valid():
+            serializer.save()
+            print("The project has been saved.")
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print("Invalid serializer!!!")
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ContributorViewset(ModelViewSet):
