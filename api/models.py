@@ -37,13 +37,13 @@ class Contributor(models.Model):
     ]
 
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL,
-                                on_delete=models.CASCADE,
-                                related_name="contributors"
-                                )
+                             on_delete=models.CASCADE,
+                             related_name="contributors"
+                             )
     project = models.ForeignKey(to=Project,
-                                   on_delete=models.CASCADE,
-                                   related_name="project_contributor"
-                                   )
+                                on_delete=models.CASCADE,
+                                related_name="project_contributor"
+                                )
     role = models.CharField(max_length=128, choices=ROLE_CHOICES, verbose_name="Roles")
 
 
@@ -98,4 +98,3 @@ class Comment(models.Model):
                                  on_delete=models.CASCADE,
                                  related_name='comment_issue')
     date_created = models.DateTimeField(auto_now_add=True, verbose_name="Creation date")
-
