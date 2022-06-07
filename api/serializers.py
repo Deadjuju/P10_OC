@@ -40,6 +40,17 @@ class ContributorSerializer(ModelSerializer):
         model = Contributor
         fields = ['id', 'user', 'project', 'role']
 
+    def create(self, validated_data):
+        user = validated_data['user']
+        print(f"User: {user}")
+        project = validated_data['project']
+        role = validated_data['role']
+        contributor = Contributor.objects.create(user=user,
+                                                 project=project,
+                                                 role=role)
+        contributor.save()
+        return contributor
+
 
 # -------------------------------- Issue --------------------------------
 

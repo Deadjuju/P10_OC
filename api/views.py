@@ -34,12 +34,6 @@ class ProjectViewset(ModelViewSet):
             return self.detail_serializer_class
         return super(ProjectViewset, self).get_serializer_class()
 
-    # def list(self, request, *args, **kwargs):
-    #     query = request.user
-    #     query_set = Project.objects.filter(author_user_id=query.id)
-    #     return Response(self.serializer_class(query_set, many=True).data,
-    #                     status=status.HTTP_200_OK)
-
     def create(self, request, *args, **kwargs):
         print("*" * 85)
         # data = request.data
@@ -67,9 +61,12 @@ class ProjectViewset(ModelViewSet):
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# -------------------------------- Contributor --------------------------------
+
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
-    # http_method_names = ['get', ]
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'delete', ]
 
     def get_queryset(self):
         queryset = Contributor.objects.all()
@@ -82,6 +79,36 @@ class ContributorViewset(ModelViewSet):
         if not queryset:
             raise exceptions.NotFound(detail="This project does not exist")
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        user = request.POST.get('user')
+        queryset = Contributor.objects.filter(user=user)
+        if queryset:
+            raise exceptions.ValidationError(detail="This contributor already exist")
+        project = self.kwargs.get('project_pk')
+        data = {
+            "user": user,
+            "project": project,
+            "role": Contributor.ROLE_CHOICES[1][0],
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(f"Instance: {instance}")
+        self.perform_destroy(instance)
+        return Response({
+            "message": "Contributor deleted successfully"
+        },
+            status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class IssueViewset(ModelViewSet):
