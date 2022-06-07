@@ -9,7 +9,7 @@ router = routers.SimpleRouter()
 router.register(r'projects', ProjectViewset, basename='projects')
 
 # Add users and issues to project path
-project_router = routers.NestedSimpleRouter(router, r'projects', lookup='projects')
+project_router = routers.NestedSimpleRouter(router, r'projects', lookup='project')
 project_router.register(r'users', ContributorViewset, basename='users')
 project_router.register(r'issues', IssueViewset, basename='issues')
 

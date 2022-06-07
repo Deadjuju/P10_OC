@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import status, exceptions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -12,7 +12,8 @@ from api.serializers import (ProjectDetailSerializer,
                              IssueDetailSerializer,
                              CommentListSerializer,
                              CommentDetailSerializer)
-from api.utils import validate_multiple_choice
+from api.utils import validate_multiple_choice, is_kwarg_digit
+
 
 User = get_user_model()
 
@@ -68,12 +69,18 @@ class ProjectViewset(ModelViewSet):
 
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
+    # http_method_names = ['get', ]
 
     def get_queryset(self):
         queryset = Contributor.objects.all()
-        project_id = self.request.GET.get('project_id')
+
+        project_id = self.kwargs.get('project_pk')
+        is_kwarg_digit(project_id)
+
         if project_id is not None:
-            queryset = Contributor.objects.filter(project_id=project_id)
+            queryset = Contributor.objects.filter(project=project_id)
+        if not queryset:
+            raise exceptions.NotFound(detail="This project does not exist")
         return queryset
 
 

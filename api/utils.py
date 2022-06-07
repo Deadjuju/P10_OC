@@ -20,3 +20,14 @@ def validate_multiple_choice(choices_list: List, user_choice: str) -> str:
     else:
         print("Choice -> valid! :D")
         return user_choice
+
+
+def is_kwarg_digit(kwarg_to_validate) -> bool:
+    """ Checks if ID is an integer.
+        Else raises an error and displays a response to the user """
+
+    if not kwarg_to_validate.isnumeric():
+        message = f"{kwarg_to_validate}: not a valid choice -> Waiting for an integer"
+        raise exceptions.ValidationError(detail=message)
+
+    return True
