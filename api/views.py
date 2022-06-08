@@ -165,6 +165,14 @@ class IssueViewset(ModelViewSet):
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            "message": "Issue deleted successfully"
+        },
+            status=status.HTTP_200_OK)
+
 
 class CommentViewset(ModelViewSet):
     serializer_class = CommentListSerializer
