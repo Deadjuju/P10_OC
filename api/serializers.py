@@ -83,13 +83,20 @@ class CommentListSerializer(ModelSerializer):
     class Meta:
         model = Comment
         fields = [
-            'description', 'author_user_id', 'issue_id'
+            'id', 'description', 'author_user', 'issue',
         ]
+        extra_kwargs = {
+            'author_user': {'write_only': True},
+            'issue': {'write_only': True},
+        }
 
 
 class CommentDetailSerializer(ModelSerializer):
+    author_user = UserSerializer()
+    issue = IssueDetailSerializer()
+
     class Meta:
         model = Comment
         fields = [
-            'description', 'author_user_id', 'issue_id', 'date_created'
+            'id', 'description', 'author_user', 'issue', 'date_created',
         ]

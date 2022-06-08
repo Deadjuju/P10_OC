@@ -174,18 +174,50 @@ class IssueViewset(ModelViewSet):
             status=status.HTTP_200_OK)
 
 
+# -------------------------------- Comment --------------------------------
+
 class CommentViewset(ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
 
     def get_queryset(self):
         queryset = Comment.objects.all()
-        issue_id = self.request.GET.get('issue_id')
+
+        issue_id = self.kwargs.get('issue_pk')
+        is_digit_or_raise_exception(issue_id)
+
         if issue_id is not None:
-            queryset = Comment.objects.filter(issue_id=issue_id)
+            queryset = Comment.objects.filter(issue=issue_id)
         return queryset
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(CommentViewset, self).get_serializer_class()
+
+    def create(self, request, *args, **kwargs):
+
+        author_id = request.user.id
+        issue_id = self.kwargs.get('issue_pk')
+
+        data = {
+            "description": request.POST.get('description'),
+            "author_user": author_id,
+            "issue": issue_id,
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            "message": "Comment deleted successfully"
+        },
+            status=status.HTTP_200_OK)
+
+
