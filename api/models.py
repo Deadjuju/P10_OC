@@ -70,16 +70,16 @@ class Issue(models.Model):
     description = models.CharField(max_length=2048, verbose_name="Description")
     tag = models.CharField(max_length=128, choices=TAG_CHOICES)
     priority = models.CharField(max_length=128, choices=PRIORITY_CHOICES)
-    project_id = models.ForeignKey(to=Project,
-                                   on_delete=models.CASCADE)
+    project = models.ForeignKey(to=Project,
+                                on_delete=models.CASCADE)
     status = models.CharField(max_length=128, choices=STATUS_CHOICES)
-    author_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
-                                       on_delete=models.CASCADE,
-                                       related_name='issues_author')
-    assignee_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
-                                         on_delete=models.CASCADE,
-                                         default=author_user_id,
-                                         related_name='issues_assigned')
+    author_user = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                    on_delete=models.CASCADE,
+                                    related_name='issues_author')
+    assignee_user = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                      on_delete=models.CASCADE,
+                                      default=author_user,
+                                      related_name='issues_assigned')
     date_created = models.DateTimeField(auto_now_add=True, verbose_name="Creation date")
     date_updated = models.DateTimeField(auto_now=True)
 

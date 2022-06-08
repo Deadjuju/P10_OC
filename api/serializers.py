@@ -59,8 +59,13 @@ class IssueListSerializer(ModelSerializer):
         model = Issue
         fields = [
             'id', 'title', 'description', 'tag', 'priority',
-            'project_id', 'status', 'author_user_id', 'assignee_user_id', 'date_created'
+            'project', 'status', 'author_user', 'assignee_user', 'date_created'
         ]
+
+    def create(self, validated_data):
+        issue = Issue.objects.create(**validated_data)
+        issue.save()
+        return issue
 
 
 class IssueDetailSerializer(ModelSerializer):
@@ -68,7 +73,7 @@ class IssueDetailSerializer(ModelSerializer):
         model = Issue
         fields = [
             'id', 'title', 'description', 'tag', 'priority',
-            'project_id', 'status', 'author_user_id', 'assignee_user_id', 'date_created'
+            'project', 'status', 'author_user', 'assignee_user', 'date_created'
         ]
 
 

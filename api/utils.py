@@ -22,12 +22,12 @@ def validate_multiple_choice(choices_list: List, user_choice: str) -> str:
         return user_choice
 
 
-def is_kwarg_digit(kwarg_to_validate) -> bool:
-    """ Checks if ID is an integer.
+def is_digit_or_raise_exception(digit_to_validate) -> bool:
+    """ Checks if a field is an integer.
         Else raises an error and displays a response to the user """
 
-    if not kwarg_to_validate.isnumeric():
-        message = f"{kwarg_to_validate}: not a valid choice -> Waiting for an integer"
+    if not digit_to_validate.isnumeric():
+        message = f"{digit_to_validate}: not a valid choice -> Waiting for an integer"
         raise exceptions.ValidationError(detail=message)
 
     return True

@@ -12,8 +12,7 @@ from api.serializers import (ProjectDetailSerializer,
                              IssueDetailSerializer,
                              CommentListSerializer,
                              CommentDetailSerializer)
-from api.utils import validate_multiple_choice, is_kwarg_digit
-
+from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 
 User = get_user_model()
 
@@ -72,7 +71,7 @@ class ContributorViewset(ModelViewSet):
         queryset = Contributor.objects.all()
 
         project_id = self.kwargs.get('project_pk')
-        is_kwarg_digit(project_id)
+        is_digit_or_raise_exception(project_id)
 
         if project_id is not None:
             queryset = Contributor.objects.filter(project=project_id)
@@ -107,21 +106,64 @@ class ContributorViewset(ModelViewSet):
             status=status.HTTP_200_OK)
 
 
+# -------------------------------- Issue --------------------------------
+
 class IssueViewset(ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
 
     def get_queryset(self):
         queryset = Issue.objects.all()
-        project_id = self.request.GET.get('project_id')
+
+        project_id = self.kwargs.get('project_pk')
+        is_digit_or_raise_exception(project_id)
+
         if project_id is not None:
             queryset = Issue.objects.filter(project_id=project_id)
+        if not queryset:
+            raise exceptions.NotFound(detail="This project does not exist")
         return queryset
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super(IssueViewset, self).get_serializer_class()
+
+    def create(self, request, *args, **kwargs):
+        project = self.kwargs.get('project_pk')
+        tag = validate_multiple_choice(choices_list=Issue.TAG_CHOICES,
+                                       user_choice=request.POST.get('tag'))
+        priority = validate_multiple_choice(choices_list=Issue.PRIORITY_CHOICES,
+                                            user_choice=request.POST.get('priority'))
+        status_choice = validate_multiple_choice(choices_list=Issue.STATUS_CHOICES,
+                                                 user_choice=request.POST.get('status'))
+        author_id = request.user.id
+        assignee_id = request.POST.get('assignee_user')
+        is_digit_or_raise_exception(assignee_id)
+
+        # Check if the assignee is a contributor
+        contributors_id = [contrib.user.id for contrib in Contributor.objects.filter(project=project)]
+        if assignee_id in contributors_id:
+            assignee = assignee_id
+        else:
+            assignee = author_id
+
+        data = {
+            "title": request.POST.get('title'),
+            "description": request.POST.get('description'),
+            "tag": tag,
+            "priority": priority,
+            "project": project,
+            "status": status_choice,
+            "author_user": author_id,
+            "assignee_user": assignee,
+        }
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommentViewset(ModelViewSet):
