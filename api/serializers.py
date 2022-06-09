@@ -9,9 +9,9 @@ from authentication.serializers import UserSerializer
 class ProjectListSerializer(ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user_id']
+        fields = ['id', 'title', 'description', 'type', 'author_user']
         extra_kwargs = {
-            'author_user_id': {'write_only': True},
+            'author_user': {'write_only': True},
             'description': {'write_only': True},
         }
 
@@ -19,18 +19,18 @@ class ProjectListSerializer(ModelSerializer):
         title = validated_data['title']
         description = validated_data['description']
         type = validated_data['type']
-        author_user_id = validated_data["author_user_id"]
+        author_user = validated_data["author_user"]
         project = Project.objects.create(**validated_data)
         project.save()
         return project
 
 
 class ProjectDetailSerializer(ModelSerializer):
-    author_user_id = UserSerializer()
+    author_user = UserSerializer()
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'type', 'author_user_id', 'date_created']
+        fields = ['id', 'title', 'description', 'type', 'author_user', 'date_created']
 
 
 # -------------------------------- Contributor --------------------------------

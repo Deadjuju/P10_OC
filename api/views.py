@@ -25,7 +25,7 @@ class ProjectViewset(ModelViewSet):
     def get_queryset(self):
         if self.action == 'list':
             query = self.request.user
-            return Project.objects.filter(author_user_id=query.id)
+            return Project.objects.filter(author_user=query.id)
         return Project.objects.all()
 
     def get_serializer_class(self):
@@ -43,10 +43,10 @@ class ProjectViewset(ModelViewSet):
             "title": request.POST.get('title', ''),
             "description": request.POST.get('description', ''),
             "type": type,
-            "author_user_id": id_author,
+            "author_user": id_author,
         }
         serializer = self.serializer_class(data=data,
-                                           context={'author_user_id': id_author})
+                                           context={'author_user': id_author})
         if serializer.is_valid():
             project = serializer.save()
             contributor = Contributor.objects.create(project=project,

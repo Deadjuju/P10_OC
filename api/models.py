@@ -18,11 +18,11 @@ class Project(models.Model):
     title = models.CharField(max_length=128, verbose_name="Title")
     description = models.CharField(max_length=2048, verbose_name="Description")
     type = models.CharField(max_length=15, choices=PROJECT_TYPE, verbose_name="Type")
-    author_user_id = models.ForeignKey(to=settings.AUTH_USER_MODEL,
-                                       on_delete=models.CASCADE,
-                                       related_name='projects',
-                                       verbose_name="Project author",
-                                       null=True)
+    author_user = models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                    on_delete=models.CASCADE,
+                                    related_name='projects',
+                                    verbose_name="Project author",
+                                    null=True)
 
     def __str__(self):
         return f"{self.title}"
