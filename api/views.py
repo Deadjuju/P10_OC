@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status, exceptions
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.models import Project, Contributor, Issue, Comment
-from api.permissions import (IsProjectAuthorOrContribOrReadOnly, )
+from api.permissions import (IsProjectAuthorOrContributorDetailsOrReadOnly, IsProjectAuthorOrContributorReadAndPost,
+                             IsIssueAuthorOrContributorReadAndPost, )
 from api.serializers import (ProjectDetailSerializer,
                              ProjectListSerializer,
                              ContributorSerializer,
@@ -18,10 +20,12 @@ from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 User = get_user_model()
 
 
+# -------------------------------- Project --------------------------------
+
 class ProjectViewset(ModelViewSet):
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
-    permission_classes = [IsAuthenticated, IsProjectAuthorOrContribOrReadOnly]
+    permission_classes = [IsAuthenticated, IsProjectAuthorOrContributorDetailsOrReadOnly]
 
     def get_queryset(self):
         if self.action == 'list':
@@ -65,7 +69,7 @@ class ProjectViewset(ModelViewSet):
 
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsProjectAuthorOrContributorReadAndPost]
     http_method_names = ['get', 'post', 'delete', ]
 
     def get_queryset(self):
@@ -113,17 +117,13 @@ class ContributorViewset(ModelViewSet):
 class IssueViewset(ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
+    permission_classes = [IsAuthenticated, IsIssueAuthorOrContributorReadAndPost]
 
     def get_queryset(self):
-        queryset = Issue.objects.all()
-
         project_id = self.kwargs.get('project_pk')
         is_digit_or_raise_exception(project_id)
-
-        if project_id is not None:
-            queryset = Issue.objects.filter(project_id=project_id)
-        if not queryset:
-            raise exceptions.NotFound(detail="This project does not exist")
+        get_object_or_404(Project, id=project_id)
+        queryset = Issue.objects.filter(project=project_id)
         return queryset
 
     def get_serializer_class(self):
@@ -141,7 +141,8 @@ class IssueViewset(ModelViewSet):
                                                  user_choice=request.POST.get('status'))
         author_id = request.user.id
         assignee_id = request.POST.get('assignee_user')
-        is_digit_or_raise_exception(assignee_id)
+        if assignee_id is not None:
+            is_digit_or_raise_exception(assignee_id)
 
         # Check if the assignee is a contributor
         contributors_id = [contrib.user.id for contrib in Contributor.objects.filter(project=project)]
