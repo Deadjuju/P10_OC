@@ -59,8 +59,11 @@ class IssueListSerializer(ModelSerializer):
         model = Issue
         fields = [
             'id', 'title', 'description', 'tag', 'priority',
-            'project', 'status', 'author_user', 'assignee_user', 'date_created'
+            'project', 'status', 'author_user', 'assignee_user',
         ]
+        extra_kwargs = {
+            'date_created': {'write_only': True},
+        }
 
     def create(self, validated_data):
         issue = Issue.objects.create(**validated_data)
@@ -69,11 +72,16 @@ class IssueListSerializer(ModelSerializer):
 
 
 class IssueDetailSerializer(ModelSerializer):
+    project = ProjectDetailSerializer()
+    author_user = UserSerializer()
+    assignee_user = UserSerializer()
+
     class Meta:
         model = Issue
         fields = [
             'id', 'title', 'description', 'tag', 'priority',
-            'project', 'status', 'author_user', 'assignee_user', 'date_created'
+            'project', 'status', 'author_user', 'assignee_user',
+            'date_created', 'date_updated',
         ]
 
 
