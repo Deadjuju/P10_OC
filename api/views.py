@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from api.models import Project, Contributor, Issue, Comment
 from api.permissions import (IsProjectAuthorOrContributorDetailsOrReadOnly, IsProjectAuthorOrContributorReadAndPost,
-                             IsIssueAuthorOrContributorReadAndPost, )
+                             IsIssueAuthorOrContributorReadAndPost, IsCommentAuthorOrContributorReadAndPost, )
 from api.serializers import (ProjectDetailSerializer,
                              ProjectListSerializer,
                              ContributorSerializer,
@@ -182,12 +182,16 @@ class IssueViewset(ModelViewSet):
 class CommentViewset(ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
+    permission_classes = [IsAuthenticated, IsCommentAuthorOrContributorReadAndPost]
 
     def get_queryset(self):
         queryset = Comment.objects.all()
-
         issue_id = self.kwargs.get('issue_pk')
+        project_id = self.kwargs.get('project_pk')
         is_digit_or_raise_exception(issue_id)
+        is_digit_or_raise_exception(project_id)
+        get_object_or_404(Issue, id=issue_id)
+        get_object_or_404(Project, id=project_id)
 
         if issue_id is not None:
             queryset = Comment.objects.filter(issue=issue_id)

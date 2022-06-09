@@ -55,3 +55,20 @@ class IsIssueAuthorOrContributorReadAndPost(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return bool(obj.author_user == request.user)
+
+
+class IsCommentAuthorOrContributorReadAndPost(BasePermission):
+    """ Contributors can Read everything and Post
+        and the comment author has all permissions."""
+
+    def has_permission(self, request, view):
+        project_id = view.kwargs.get("project_pk")
+        contributors = [
+            contrib.user for contrib in Contributor.objects.filter(project=project_id)
+        ]
+        return bool(request.user in contributors)
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return bool(obj.author_user == request.user)
