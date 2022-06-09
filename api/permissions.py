@@ -1,7 +1,6 @@
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from .models import Contributor, Issue
+from .models import Contributor
 
 
 class IsProjectAuthorOrContributorDetailsOrReadOnly(BasePermission):
@@ -23,9 +22,8 @@ class IsProjectAuthorOrContributorDetailsOrReadOnly(BasePermission):
         return obj.author_user == request.user
 
 
-class IsProjectAuthorOrContributorReadAndPost(BasePermission):
-    """ Contributors can Read everything and Post
-    and the project author has all permissions."""
+class IsContributor(BasePermission):
+    """ Permissions for contributors """
 
     def has_permission(self, request, view):
         project_id = view.kwargs.get("project_pk")
@@ -33,6 +31,10 @@ class IsProjectAuthorOrContributorReadAndPost(BasePermission):
             contrib.user for contrib in Contributor.objects.filter(project=project_id)
         ]
         return bool(request.user in contributors)
+
+
+class IsProjectAuthorOrReadOnly(BasePermission):
+    """ Permissions for project's author """
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
@@ -40,16 +42,8 @@ class IsProjectAuthorOrContributorReadAndPost(BasePermission):
         return bool(obj.project.author_user == request.user)
 
 
-class IsIssueAuthorOrContributorReadAndPost(BasePermission):
-    """ Contributors can Read everything and Post
-        and the issue author has all permissions."""
-
-    def has_permission(self, request, view):
-        project_id = view.kwargs.get("project_pk")
-        contributors = [
-            contrib.user for contrib in Contributor.objects.filter(project=project_id)
-        ]
-        return bool(request.user in contributors)
+class IsIssueAuthorOrReadOnly(BasePermission):
+    """ Permissions for issue's author """
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
@@ -57,16 +51,8 @@ class IsIssueAuthorOrContributorReadAndPost(BasePermission):
         return bool(obj.author_user == request.user)
 
 
-class IsCommentAuthorOrContributorReadAndPost(BasePermission):
-    """ Contributors can Read everything and Post
-        and the comment author has all permissions."""
-
-    def has_permission(self, request, view):
-        project_id = view.kwargs.get("project_pk")
-        contributors = [
-            contrib.user for contrib in Contributor.objects.filter(project=project_id)
-        ]
-        return bool(request.user in contributors)
+class IsCommentAuthorOrReadOnly(BasePermission):
+    """ Permissions for comment's author """
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:

@@ -6,8 +6,11 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.models import Project, Contributor, Issue, Comment
-from api.permissions import (IsProjectAuthorOrContributorDetailsOrReadOnly, IsProjectAuthorOrContributorReadAndPost,
-                             IsIssueAuthorOrContributorReadAndPost, IsCommentAuthorOrContributorReadAndPost, )
+from api.permissions import (IsContributor,
+                             IsProjectAuthorOrContributorDetailsOrReadOnly,
+                             IsProjectAuthorOrReadOnly,
+                             IsIssueAuthorOrReadOnly,
+                             IsCommentAuthorOrReadOnly)
 from api.serializers import (ProjectDetailSerializer,
                              ProjectListSerializer,
                              ContributorSerializer,
@@ -69,7 +72,7 @@ class ProjectViewset(ModelViewSet):
 
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated, IsProjectAuthorOrContributorReadAndPost]
+    permission_classes = [IsAuthenticated, IsContributor, IsProjectAuthorOrReadOnly]
     http_method_names = ['get', 'post', 'delete', ]
 
     def get_queryset(self):
@@ -117,7 +120,7 @@ class ContributorViewset(ModelViewSet):
 class IssueViewset(ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
-    permission_classes = [IsAuthenticated, IsIssueAuthorOrContributorReadAndPost]
+    permission_classes = [IsAuthenticated, IsContributor, IsIssueAuthorOrReadOnly]
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
@@ -182,7 +185,7 @@ class IssueViewset(ModelViewSet):
 class CommentViewset(ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
-    permission_classes = [IsAuthenticated, IsCommentAuthorOrContributorReadAndPost]
+    permission_classes = [IsAuthenticated, IsContributor, IsCommentAuthorOrReadOnly]
 
     def get_queryset(self):
         queryset = Comment.objects.all()
