@@ -20,12 +20,23 @@ from api.serializers import (ProjectDetailSerializer,
                              CommentDetailSerializer)
 from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 
+
 User = get_user_model()
+
+
+class MultipleSerializerMixin:
+
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve' and self.detail_serializer_class is not None:
+            return self.detail_serializer_class
+        return super(MultipleSerializerMixin, self).get_serializer_class()
 
 
 # -------------------------------- Project --------------------------------
 
-class ProjectViewset(ModelViewSet):
+class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
     permission_classes = [IsAuthenticated, IsProjectAuthorOrContributorDetailsOrReadOnly]
@@ -33,17 +44,13 @@ class ProjectViewset(ModelViewSet):
     def get_queryset(self):
         if self.action == 'list':
             query = self.request.user
-            return Project.objects.filter(author_user=query.id)
+            contributors = [
+                contributor.user for contributor in Contributor.objects.filter(user=query)
+            ]
+            return Project.objects.filter(author_user__in=contributors)
         return Project.objects.all()
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super(ProjectViewset, self).get_serializer_class()
-
     def create(self, request, *args, **kwargs):
-        print("*" * 85)
-        # data = request.data
         id_author = request.user.id
         type = validate_multiple_choice(choices_list=Project.PROJECT_TYPE,
                                         user_choice=request.POST.get('type'))
@@ -117,7 +124,7 @@ class ContributorViewset(ModelViewSet):
 
 # -------------------------------- Issue --------------------------------
 
-class IssueViewset(ModelViewSet):
+class IssueViewset(MultipleSerializerMixin, ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsIssueAuthorOrReadOnly]
@@ -128,11 +135,6 @@ class IssueViewset(ModelViewSet):
         get_object_or_404(Project, id=project_id)
         queryset = Issue.objects.filter(project=project_id)
         return queryset
-
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super(IssueViewset, self).get_serializer_class()
 
     def create(self, request, *args, **kwargs):
         project = self.kwargs.get('project_pk')
@@ -182,7 +184,7 @@ class IssueViewset(ModelViewSet):
 
 # -------------------------------- Comment --------------------------------
 
-class CommentViewset(ModelViewSet):
+class CommentViewset(MultipleSerializerMixin, ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsCommentAuthorOrReadOnly]
@@ -199,11 +201,6 @@ class CommentViewset(ModelViewSet):
         if issue_id is not None:
             queryset = Comment.objects.filter(issue=issue_id)
         return queryset
-
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super(CommentViewset, self).get_serializer_class()
 
     def create(self, request, *args, **kwargs):
 
