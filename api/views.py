@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from api.models import Project, Contributor, Issue, Comment
+from api.permissions import (IsProjectAuthorOrContribOrReadOnly, )
 from api.serializers import (ProjectDetailSerializer,
                              ProjectListSerializer,
                              ContributorSerializer,
@@ -20,7 +21,7 @@ User = get_user_model()
 class ProjectViewset(ModelViewSet):
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsProjectAuthorOrContribOrReadOnly]
 
     def get_queryset(self):
         if self.action == 'list':
@@ -81,7 +82,8 @@ class ContributorViewset(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user = request.POST.get('user')
-        queryset = Contributor.objects.filter(user=user)
+        queryset = Contributor.objects.filter(user=user, project=self.kwargs.get('project_pk'))
+        print(queryset)
         if queryset:
             raise exceptions.ValidationError(detail="This contributor already exist")
         project = self.kwargs.get('project_pk')
