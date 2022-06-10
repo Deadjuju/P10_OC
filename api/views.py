@@ -74,6 +74,14 @@ class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
             print("Invalid serializer!!!")
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            "message": f"Project - {instance} - deleted successfully"
+        },
+            status=status.HTTP_200_OK)
+
 
 # -------------------------------- Contributor --------------------------------
 
