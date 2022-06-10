@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 
 from api.models import Project, Contributor, Issue, Comment
@@ -15,11 +16,12 @@ class ProjectListSerializer(ModelSerializer):
             'description': {'write_only': True},
         }
 
+    def validate_title(self, value):
+        if Project.objects.filter(title=value).exists():
+            raise ValidationError('Project already exists')
+        return value
+
     def create(self, validated_data):
-        title = validated_data['title']
-        description = validated_data['description']
-        type = validated_data['type']
-        author_user = validated_data["author_user"]
         project = Project.objects.create(**validated_data)
         project.save()
         return project
