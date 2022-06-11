@@ -46,6 +46,9 @@ class Contributor(models.Model):
                                 )
     role = models.CharField(max_length=128, choices=ROLE_CHOICES, verbose_name="Roles")
 
+    def __str__(self):
+        return f"{self.user}"
+
 
 class Issue(models.Model):
     """ all information relating to an issue """
@@ -98,3 +101,6 @@ class Comment(models.Model):
                               on_delete=models.CASCADE,
                               related_name='comment_issue')
     date_created = models.DateTimeField(auto_now_add=True, verbose_name="Creation date")
+
+    def __str__(self):
+        return f"Comment from issue - {self.issue} -"
