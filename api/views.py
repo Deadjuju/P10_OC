@@ -13,11 +13,12 @@ from api.permissions import (IsContributor,
                              IsCommentAuthorOrReadOnly)
 from api.serializers import (ProjectDetailSerializer,
                              ProjectListSerializer,
-                             ContributorSerializer,
+                             ContributorListSerializer,
                              IssueListSerializer,
                              IssueDetailSerializer,
                              CommentListSerializer,
-                             CommentDetailSerializer)
+                             CommentDetailSerializer,
+                             ContributorDetailSerializer)
 from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 
 
@@ -25,7 +26,6 @@ User = get_user_model()
 
 
 class MultipleSerializerMixin:
-
     detail_serializer_class = None
 
     def get_serializer_class(self):
@@ -52,16 +52,15 @@ class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         id_author = request.user.id
-        type = validate_multiple_choice(choices_list=Project.PROJECT_TYPE,
-                                        user_choice=request.POST.get('type'))
+        type_choice = validate_multiple_choice(choices_list=Project.PROJECT_TYPE,
+                                               user_choice=request.POST.get('type'))
         data = {
-            "title": request.POST.get('title', ''),
-            "description": request.POST.get('description', ''),
-            "type": type,
+            "title": request.POST.get('title'),
+            "description": request.POST.get('description'),
+            "type": type_choice,
             "author_user": id_author,
         }
-        serializer = self.serializer_class(data=data,
-                                           context={'author_user': id_author})
+        serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             project = serializer.save()
             contributor = Contributor.objects.create(project=project,
@@ -85,8 +84,9 @@ class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
 
 # -------------------------------- Contributor --------------------------------
 
-class ContributorViewset(ModelViewSet):
-    serializer_class = ContributorSerializer
+class ContributorViewset(MultipleSerializerMixin, ModelViewSet):
+    serializer_class = ContributorListSerializer
+    detail_serializer_class = ContributorDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsProjectAuthorOrReadOnly]
     http_method_names = ['get', 'post', 'delete', ]
 
@@ -125,7 +125,7 @@ class ContributorViewset(ModelViewSet):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({
-            "message": "Contributor deleted successfully"
+            "message": f"Contributor {instance}: deleted successfully"
         },
             status=status.HTTP_200_OK)
 
@@ -234,5 +234,3 @@ class CommentViewset(MultipleSerializerMixin, ModelViewSet):
             "message": "Comment deleted successfully"
         },
             status=status.HTTP_200_OK)
-
-

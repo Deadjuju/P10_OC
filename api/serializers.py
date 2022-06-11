@@ -37,7 +37,7 @@ class ProjectDetailSerializer(ModelSerializer):
 
 # -------------------------------- Contributor --------------------------------
 
-class ContributorSerializer(ModelSerializer):
+class ContributorListSerializer(ModelSerializer):
     class Meta:
         model = Contributor
         fields = ['id', 'user', 'project', 'role']
@@ -52,6 +52,15 @@ class ContributorSerializer(ModelSerializer):
                                                  role=role)
         contributor.save()
         return contributor
+
+
+class ContributorDetailSerializer(ModelSerializer):
+    project = ProjectDetailSerializer()
+    user = UserSerializer()
+
+    class Meta:
+        model = Contributor
+        fields = ['id', 'user', 'project', 'role']
 
 
 # -------------------------------- Issue --------------------------------
