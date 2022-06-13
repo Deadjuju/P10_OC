@@ -197,6 +197,7 @@ class CommentViewset(MultipleSerializerMixin, ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsCommentAuthorOrReadOnly]
+    http_method_names = ['get', 'post', 'put', 'delete', ]
 
     def get_queryset(self):
         queryset = Comment.objects.all()
@@ -224,6 +225,24 @@ class CommentViewset(MultipleSerializerMixin, ModelViewSet):
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        author_id = request.user.id
+        issue_id = self.kwargs.get('issue_pk')
+        data = {
+            "description": request.POST.get('description'),
+            "author_user": author_id,
+            "issue": issue_id,
+        }
+        serializer = self.serializer_class(instance=instance,
+                                           data=data,
+                                           partial=True)
+        if serializer.is_valid():
+            self.perform_update(serializer)
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
