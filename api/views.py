@@ -21,7 +21,6 @@ from api.serializers import (ProjectDetailSerializer,
                              ContributorDetailSerializer)
 from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 
-
 User = get_user_model()
 
 
@@ -136,6 +135,7 @@ class IssueViewset(MultipleSerializerMixin, ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsIssueAuthorOrReadOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete', ]
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
@@ -154,15 +154,10 @@ class IssueViewset(MultipleSerializerMixin, ModelViewSet):
                                                  user_choice=request.POST.get('status'))
         author_id = request.user.id
         assignee_id = request.POST.get('assignee_user')
-        if assignee_id is not None:
-            is_digit_or_raise_exception(assignee_id)
-
-        # Check if the assignee is a contributor
-        contributors_id = [contrib.user.id for contrib in Contributor.objects.filter(project=project)]
-        if assignee_id in contributors_id:
-            assignee = assignee_id
+        if assignee_id is None:
+            assignee_id = author_id
         else:
-            assignee = author_id
+            is_digit_or_raise_exception(assignee_id)
 
         data = {
             "title": request.POST.get('title'),
@@ -172,14 +167,20 @@ class IssueViewset(MultipleSerializerMixin, ModelViewSet):
             "project": project,
             "status": status_choice,
             "author_user": author_id,
-            "assignee_user": assignee,
+            "assignee_user": assignee_id,
         }
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
-            serializer.save()
+            self.perform_create(serializer)
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        assignee_id = request.POST.get('assignee_user')
+        if assignee_id is not None:
+            is_digit_or_raise_exception(assignee_id)
+        return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

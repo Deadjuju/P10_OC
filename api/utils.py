@@ -4,8 +4,10 @@ from rest_framework import exceptions
 
 
 def validate_multiple_choice(choices_list: List, user_choice: str) -> str:
-    """ Checks if the user's choice is part of the list of choices.
-        Else raises an error and displays the choices. """
+    """
+    Checks if the user's choice is part of the list of choices.
+    Else raises an error and displays the choices.
+    """
 
     is_choice_valid = False
     choices_proposition = "Choices: "
@@ -23,10 +25,14 @@ def validate_multiple_choice(choices_list: List, user_choice: str) -> str:
 
 
 def is_digit_or_raise_exception(digit_to_validate) -> bool:
-    """ Checks if a field is an integer.
-        Else raises an error and displays a response to the user """
+    """
+    Checks if a field is an integer.
+    Else raises an error and displays a response to the user
+    """
 
-    if not digit_to_validate.isnumeric():
+    try:
+        int(digit_to_validate)
+    except ValueError:
         message = f"{digit_to_validate}: not a valid choice -> Waiting for an integer"
         raise exceptions.ValidationError(detail=message)
 

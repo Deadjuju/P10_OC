@@ -1,8 +1,15 @@
+from django.contrib.auth import get_user_model
+from rest_framework import exceptions
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.serializers import ModelSerializer
 
 from api.models import Project, Contributor, Issue, Comment
+from api.utils import is_digit_or_raise_exception
 from authentication.serializers import UserSerializer
+
+
+User = get_user_model()
 
 
 # -------------------------------- Project --------------------------------
@@ -76,10 +83,39 @@ class IssueListSerializer(ModelSerializer):
             'date_created': {'write_only': True},
         }
 
+    @classmethod
+    def check_if_assignee_is_contributor(cls,
+                                         assignee: User,
+                                         project: Project):
+        """
+        Raise an exceptions if assignee is not in contributor's list
+        """
+        assignee = get_object_or_404(User, pk=assignee.id)
+        contributors = [
+            contrib.user for contrib in Contributor.objects.filter(project=project)
+        ]
+        if assignee not in contributors:
+            raise exceptions.ValidationError(
+                detail=f"- {assignee} - This contributor is not part of the project."
+            )
+
     def create(self, validated_data):
+        self.check_if_assignee_is_contributor(assignee=validated_data['assignee_user'],
+                                              project=validated_data['project'])
         issue = Issue.objects.create(**validated_data)
-        issue.save()
         return issue
+
+    def update(self, instance, validated_data):
+        super(IssueListSerializer, self).update(instance, validated_data)
+
+        if validated_data.get("assignee_user") is not None:
+            assignee = validated_data['assignee_user']
+            self.check_if_assignee_is_contributor(assignee=assignee,
+                                                  project=instance.project)
+            instance.assignee_user = get_object_or_404(User, pk=assignee.id)
+
+        instance.save()
+        return instance
 
 
 class IssueDetailSerializer(ModelSerializer):
