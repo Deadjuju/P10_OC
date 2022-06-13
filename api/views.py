@@ -1,11 +1,13 @@
-from django.contrib.auth import get_user_model
 from rest_framework import status, exceptions
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from api.models import Project, Contributor, Issue, Comment
+from api.models import (Project,
+                        Contributor,
+                        Issue,
+                        Comment)
 from api.permissions import (IsContributor,
                              IsProjectAuthorOrContributorDetailsOrReadOnly,
                              IsProjectAuthorOrReadOnly,
@@ -21,10 +23,11 @@ from api.serializers import (ProjectDetailSerializer,
                              ContributorDetailSerializer)
 from api.utils import validate_multiple_choice, is_digit_or_raise_exception
 
-User = get_user_model()
-
 
 class MultipleSerializerMixin:
+    """
+    Choice of serializer according to the type of action.
+    """
     detail_serializer_class = None
 
     def get_serializer_class(self):
@@ -33,9 +36,25 @@ class MultipleSerializerMixin:
         return super(MultipleSerializerMixin, self).get_serializer_class()
 
 
+class DestroyMixin:
+    """
+    Behavior of the destroy method.
+    """
+
+    def destroy(self, request, model_name, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            "message": f"{model_name} deleted successfully"
+        },
+            status=status.HTTP_200_OK)
+
+
 # -------------------------------- Project --------------------------------
 
-class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
+class ProjectViewset(MultipleSerializerMixin,
+                     DestroyMixin,
+                     ModelViewSet):
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
     permission_classes = [IsAuthenticated, IsProjectAuthorOrContributorDetailsOrReadOnly]
@@ -66,24 +85,19 @@ class ProjectViewset(MultipleSerializerMixin, ModelViewSet):
                                                      user=request.user,
                                                      role='author')
             contributor.save()
-            print("The project has been saved.")
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
-            print("Invalid serializer!!!")
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({
-            "message": f"Project - {instance} - deleted successfully"
-        },
-            status=status.HTTP_200_OK)
+    def destroy(self, request, model_name="project", *args, **kwargs):
+        return super().destroy(request, model_name, *args, **kwargs)
 
 
 # -------------------------------- Contributor --------------------------------
 
-class ContributorViewset(MultipleSerializerMixin, ModelViewSet):
+class ContributorViewset(MultipleSerializerMixin,
+                         DestroyMixin,
+                         ModelViewSet):
     serializer_class = ContributorListSerializer
     detail_serializer_class = ContributorDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsProjectAuthorOrReadOnly]
@@ -91,7 +105,6 @@ class ContributorViewset(MultipleSerializerMixin, ModelViewSet):
 
     def get_queryset(self):
         queryset = Contributor.objects.all()
-
         project_id = self.kwargs.get('project_pk')
         is_digit_or_raise_exception(project_id)
 
@@ -104,7 +117,6 @@ class ContributorViewset(MultipleSerializerMixin, ModelViewSet):
     def create(self, request, *args, **kwargs):
         user = request.POST.get('user')
         queryset = Contributor.objects.filter(user=user, project=self.kwargs.get('project_pk'))
-        print(queryset)
         if queryset:
             raise exceptions.ValidationError(detail="This contributor already exist")
         project = self.kwargs.get('project_pk')
@@ -120,18 +132,15 @@ class ContributorViewset(MultipleSerializerMixin, ModelViewSet):
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({
-            "message": f"Contributor {instance}: deleted successfully"
-        },
-            status=status.HTTP_200_OK)
+    def destroy(self, request, model_name="contributor", *args, **kwargs):
+        return super().destroy(request, model_name, *args, **kwargs)
 
 
 # -------------------------------- Issue --------------------------------
 
-class IssueViewset(MultipleSerializerMixin, ModelViewSet):
+class IssueViewset(MultipleSerializerMixin,
+                   DestroyMixin,
+                   ModelViewSet):
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsIssueAuthorOrReadOnly]
@@ -182,18 +191,15 @@ class IssueViewset(MultipleSerializerMixin, ModelViewSet):
             is_digit_or_raise_exception(assignee_id)
         return super().update(request, *args, **kwargs)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({
-            "message": "Issue deleted successfully"
-        },
-            status=status.HTTP_200_OK)
+    def destroy(self, request, model_name="issue", *args, **kwargs):
+        return super().destroy(request, model_name, *args, **kwargs)
 
 
 # -------------------------------- Comment --------------------------------
 
-class CommentViewset(MultipleSerializerMixin, ModelViewSet):
+class CommentViewset(MultipleSerializerMixin,
+                     DestroyMixin,
+                     ModelViewSet):
     serializer_class = CommentListSerializer
     detail_serializer_class = CommentDetailSerializer
     permission_classes = [IsAuthenticated, IsContributor, IsCommentAuthorOrReadOnly]
@@ -247,10 +253,5 @@ class CommentViewset(MultipleSerializerMixin, ModelViewSet):
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response({
-            "message": "Comment deleted successfully"
-        },
-            status=status.HTTP_200_OK)
+    def destroy(self, request, model_name="comment", *args, **kwargs):
+        return super().destroy(request, model_name, *args, **kwargs)
