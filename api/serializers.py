@@ -5,7 +5,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.serializers import ModelSerializer
 
 from api.models import Project, Contributor, Issue, Comment
-from api.utils import is_digit_or_raise_exception
 from authentication.serializers import UserSerializer
 
 
