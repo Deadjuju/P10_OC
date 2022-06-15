@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status, exceptions
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -80,14 +81,24 @@ class ProjectViewset(MultipleSerializerMixin,
         }
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
-            project = serializer.save()
-            contributor = Contributor.objects.create(project=project,
-                                                     user=request.user,
-                                                     role='author')
-            contributor.save()
+            self.perform_create(serializer)
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        project = serializer.save()
+        try:
+            contributor = Contributor.objects.create(project=project,
+                                                     user=project.author_user,
+                                                     role='author')
+        except TypeError:
+            error_message = {
+                'error': 'fail to create contributor',
+            }
+            raise exceptions.APIException(detail=error_message)
+        contributor.save()
 
     def destroy(self, request, model_name="project", *args, **kwargs):
         return super().destroy(request, model_name, *args, **kwargs)
@@ -111,14 +122,20 @@ class ContributorViewset(MultipleSerializerMixin,
         if project_id is not None:
             queryset = Contributor.objects.filter(project=project_id)
         if not queryset:
-            raise exceptions.NotFound(detail="This project does not exist")
+            error_message = {
+                "error": "This project does not exist",
+            }
+            raise exceptions.NotFound(detail=error_message)
         return queryset
 
     def create(self, request, *args, **kwargs):
         user = request.POST.get('user')
         queryset = Contributor.objects.filter(user=user, project=self.kwargs.get('project_pk'))
         if queryset:
-            raise exceptions.ValidationError(detail="This contributor already exist")
+            error_message = {
+                'error': 'This contributor already exist'
+            }
+            raise exceptions.ValidationError(detail=error_message)
         project = self.kwargs.get('project_pk')
         data = {
             "user": user,
