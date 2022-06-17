@@ -50,7 +50,6 @@ class ContributorListSerializer(ModelSerializer):
 
     def create(self, validated_data):
         user = validated_data['user']
-        print(f"User: {user}")
         project = validated_data['project']
         role = validated_data['role']
         contributor = Contributor.objects.create(user=user,
