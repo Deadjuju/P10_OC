@@ -8,7 +8,7 @@ from authentication.views import UserViewset
 app_name = 'authentication'
 
 router = routers.SimpleRouter()
-router.register('users', UserViewset, basename='user')
+# router.register('users', UserViewset, basename='user')
 router.register('signup', UserViewset, basename='signup')
 
 urlpatterns = [
