@@ -62,11 +62,11 @@ class ProjectViewset(MultipleSerializerMixin,
 
     def get_queryset(self):
         if self.action == 'list':
-            query = self.request.user
-            contributors = [
-                contributor.user for contributor in Contributor.objects.filter(user=query)
+            current_user = self.request.user
+            projects = [
+                contributor.project for contributor in Contributor.objects.filter(user_id=current_user.id)
             ]
-            return Project.objects.filter(author_user__in=contributors)
+            return projects
         return Project.objects.all()
 
     def create(self, request, *args, **kwargs):
